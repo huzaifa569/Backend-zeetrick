@@ -1,10 +1,24 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const requiredDbEnv = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+
+export function isDatabaseConfigured() {
+  return requiredDbEnv.every((key) => Boolean(process.env[key]));
+}
 
 export async function createTables() {
-  const host = 'localhost';
-  const user = 'root';
-  const password = 'sayyousayme@123';
-  const database = 'zeetrick';
+  if (!isDatabaseConfigured()) {
+    console.warn('Database connection is not configured. Skipping createTables.');
+    return;
+  }
+
+  const host = process.env.DB_HOST;
+  const user = process.env.DB_USER;
+  const password = process.env.DB_PASSWORD;
+  const database = process.env.DB_NAME;
 
   const connection = await mysql.createConnection({ host, user, password });
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\``);
@@ -75,5 +89,5 @@ export async function createTables() {
 );
 `);
   await connection.end();
-  console.log('Database and tables ensured');
+  console.log('Database and tables ensuredd');
 }
