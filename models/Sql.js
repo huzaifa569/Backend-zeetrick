@@ -1,10 +1,13 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export async function createTables() {
-  const host = 'localhost';
-  const user = 'root';
-  const password = 'sayyousayme@123';
-  const database = 'zeetrick';
+  const host = process.env.DB_HOST || 'localhost';
+  const user = process.env.DB_USER || 'root';
+  const password = process.env.DB_PASSWORD || 'sayyousayme@123';
+  const database = process.env.DB_NAME || 'zeetrick';
 
   const connection = await mysql.createConnection({ host, user, password });
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\``);
@@ -61,6 +64,19 @@ export async function createTables() {
 );
 `);
 
+  await connection.query(`
+        CREATE TABLE IF NOT EXISTS account_profile (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        profile_image VARCHAR(255) DEFAULT NULL,
+        full_name VARCHAR(100) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        professional_bio TEXT DEFAULT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+);
+`);
   await connection.end();
   console.log('Database and tables ensured');
 }
