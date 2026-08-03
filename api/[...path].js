@@ -45,4 +45,12 @@ app.get("/", (req, res) => {
   res.send("Express Serverless API is running!");
 });
 
+app.use((err, req, res, next) => {
+  console.error('API error:', err);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: err?.message || 'An unexpected error occurred',
+  });
+});
+
 export default serverless(app);
