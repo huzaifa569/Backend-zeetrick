@@ -15,8 +15,12 @@ export function isDatabaseConfigured() {
     (key) => !process.env[key] || process.env[key].trim() === ""
   );
 
-  if (missing.length) {
-    console.warn("Missing Environment Variables:", missing.join(", "));
+  if (missing.length > 0) {
+    console.warn(
+      "Missing Environment Variables:",
+      missing.join(", ")
+    );
+
     return false;
   }
 
@@ -25,27 +29,41 @@ export function isDatabaseConfigured() {
 
 export async function createTables() {
   if (!isDatabaseConfigured()) {
-    console.warn("Database connection is not configured. Skipping createTables.");
+    console.warn(
+      "Database connection is not configured. Skipping createTables."
+    );
     return;
   }
 
   let connection;
 
   try {
+    // Connect to MySQL server
     connection = await mysql.createConnection({
       host: process.env.DB_HOST,
-      port: process.env.DB_PORT || 3306,
+      port: Number(process.env.DB_PORT) || 3306,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       connectTimeout: 10000,
     });
 
-    await connection.query(
-      `CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\``
-    );
+    console.log("✅ Connected to MySQL");
 
-    await connection.query(`USE \`${process.env.DB_NAME}\``);
+    // Create database
+    await connection.query(`
+      CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`
+    `);
 
+    console.log(`✅ Database "${process.env.DB_NAME}" ready`);
+
+    // Select database
+    await connection.query(`
+      USE \`${process.env.DB_NAME}\`
+    `);
+
+    // =========================
+    // USERS TABLE
+    // =========================
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -59,6 +77,11 @@ export async function createTables() {
       )
     `);
 
+    console.log("✅ users table ready");
+
+    // =========================
+    // PRODUCTS TABLE
+    // =========================
     await connection.query(`
       CREATE TABLE IF NOT EXISTS products (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,6 +94,11 @@ export async function createTables() {
       )
     `);
 
+    console.log("✅ products table ready");
+
+    // =========================
+    // CUSTOMER TABLE
+    // =========================
     await connection.query(`
       CREATE TABLE IF NOT EXISTS customer (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -78,11 +106,16 @@ export async function createTables() {
         email VARCHAR(255) UNIQUE NOT NULL,
         location VARCHAR(255) NOT NULL,
         orders JSON NOT NULL,
-        optionList ENUM('regular','new','vip') NOT NULL,
+        optionList ENUM('regular', 'new', 'vip') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
+    console.log("✅ customer table ready");
+
+    // =========================
+    // REVIEWS TABLE
+    // =========================
     await connection.query(`
       CREATE TABLE IF NOT EXISTS reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -91,11 +124,16 @@ export async function createTables() {
         ProductName VARCHAR(255) NOT NULL,
         Comment TEXT NOT NULL,
         Date DATETIME NOT NULL,
-        Status ENUM('pending','approved','flagged') NOT NULL,
+        Status ENUM('pending', 'approved', 'flagged') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
+    console.log("✅ reviews table ready");
+
+    // =========================
+    // ACCOUNT PROFILE TABLE
+    // =========================
     await connection.query(`
       CREATE TABLE IF NOT EXISTS account_profile (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -110,10 +148,16 @@ export async function createTables() {
       )
     `);
 
+    console.log("✅ account_profile table ready");
+
+    console.log("=================================");
     console.log("✅ Database and tables created successfully.");
-  } catch (err) {
-    console.error("❌ Database Error:", err.message);
-    throw err;
+    console.log("=================================");
+
+  } catch (error) {
+    console.error("❌ Database Error:", error.message);
+    throw error;
+
   } finally {
     if (connection) {
       await connection.end();
