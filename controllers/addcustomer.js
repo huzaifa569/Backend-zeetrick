@@ -8,7 +8,7 @@ export const addcustomer = async (req, res) => {
       return res.status(400).json({
         message: "All fields are required",
         success: false,
-      });
+      });;
     }
 
     const exists = await CustomerAlreadyExists({
