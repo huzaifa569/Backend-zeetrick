@@ -32,15 +32,18 @@ export const addCustomer = async (customerData) => {
   const connection = await pool.getConnection();
 
   try {
+    const ordersString =
+      typeof customerData.orders === "object" && customerData.orders !== null
+        ? JSON.stringify(customerData.orders)
+        : customerData.orders;
     const [result] = await connection.execute(
-      `INSERT INTO customer
-      (name, email, location, orders, optionList)
+      `INSERT INTO customer (name, email, location, orders, optionList)
       VALUES (?, ?, ?, ?, ?)`,
       [
         customerData.name,
         customerData.email,
         customerData.location,
-        JSON.stringify(customerData.orders),
+        ordersString,
         customerData.optionList,
       ]
     );
@@ -48,11 +51,20 @@ export const addCustomer = async (customerData) => {
     return {
       id: result.insertId,
       ...customerData,
+      orders: ordersString,
     };
   } finally {
     connection.release();
   }
 };
+
+const parseCustomerOrders = (customer) => ({
+  ...customer,
+  orders:
+    typeof customer.orders === "string"
+      ? JSON.parse(customer.orders)
+      : customer.orders,
+});
 
 export const CustomerAlreadyExists = async (customerData) => {
   const connection = await pool.getConnection();
@@ -72,11 +84,9 @@ export const GetallCustomer = async () => {
   const connection = await pool.getConnection();
 
   try {
-    const [result] = await connection.execute(
-      `SELECT * FROM customer`
-    );
+    const [result] = await connection.execute("SELECT * FROM customer");
 
-    return result;
+    return result.map(parseCustomerOrders);
   } catch (err) {
     console.error("Error fetching customers:", err);
     throw err;
@@ -94,7 +104,7 @@ export const GetSpecificCustomerById  = async (id) => {
       [id]
     );
 
-    return result;
+    return result.map(parseCustomerOrders);
   } catch (err) {
     console.error("Error fetching customer by ID:", err);
     throw err;
@@ -145,6 +155,10 @@ export const UpdateById = async (customerData,id) => {
   const connection = await pool.getConnection();
 
   try {
+    const ordersString =
+      typeof customerData.orders === "object" && customerData.orders !== null
+        ? JSON.stringify(customerData.orders)
+        : customerData.orders;
     const [result] = await connection.execute(
       `UPDATE customer
        SET
@@ -158,9 +172,9 @@ export const UpdateById = async (customerData,id) => {
         customerData.name,
         customerData.email,
         customerData.location,
-        JSON.stringify(customerData.orders),
+        ordersString,
         customerData.optionList,
-        customerData.id,
+        id,
       ]
     );
 

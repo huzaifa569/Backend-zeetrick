@@ -41,11 +41,11 @@ export const addcustomer = async (req, res) => {
       created_at: new Date(),
     });
   } catch (error) {
-    console.error(error);
+    console.error("Add Customer Error:", error);
 
     return res.status(500).json({
-      message: "Customer not added",
       success: false,
+      message: error.message || "Failed to add customer",
     });
   }
 };
