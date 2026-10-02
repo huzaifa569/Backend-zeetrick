@@ -9,6 +9,23 @@ const requiredDbEnv = [
   "DB_PASSWORD",
   "DB_NAME",
 ];
+let pool;
+
+function getPool() {
+  if (!pool) {
+    pool = mysql.createPool({
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT) || 3306,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      waitForConnections: true,
+      connectionLimit: 10,
+      connectTimeout: 10000,
+    });
+  }
+
+  return pool;
+}
 
 export function isDatabaseConfigured() {
   const missing = requiredDbEnv.filter(
@@ -35,37 +52,21 @@ export async function createTables() {
     return;
   }
 
-  let connection;
-
   try {
-    // Connect to MySQL server
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT) || 3306,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      connectTimeout: 10000,
-    });
+    const databasePool = getPool();
+    const databaseName = `\`${process.env.DB_NAME.replace(/`/g, "``")}\``;
 
-    console.log("✅ Connected to MySQL");
+    console.log("Initializing MySQL connection pool");
 
-    // Create database
-    await connection.query(`
-      CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`
-    `);
+    await databasePool.query(`CREATE DATABASE IF NOT EXISTS ${databaseName}`);
 
     console.log(`✅ Database "${process.env.DB_NAME}" ready`);
-
-    // Select database
-    await connection.query(`
-      USE \`${process.env.DB_NAME}\`
-    `);
 
     // =========================
     // USERS TABLE
     // =========================
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS users (
+    await databasePool.query(`
+      CREATE TABLE IF NOT EXISTS ${databaseName}.users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         firstName VARCHAR(255) NOT NULL,
         lastName VARCHAR(255) NOT NULL,
@@ -82,8 +83,8 @@ export async function createTables() {
     // =========================
     // PRODUCTS TABLE
     // =========================
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS products (
+    await databasePool.query(`
+      CREATE TABLE IF NOT EXISTS ${databaseName}.products (
         id INT AUTO_INCREMENT PRIMARY KEY,
         productName VARCHAR(255) UNIQUE NOT NULL,
         image VARCHAR(255),
@@ -99,8 +100,8 @@ export async function createTables() {
     // =========================
     // CUSTOMER TABLE
     // =========================
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS customer (
+    await databasePool.query(`
+      CREATE TABLE IF NOT EXISTS ${databaseName}.customer (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(191) UNIQUE NOT NULL,
@@ -116,8 +117,8 @@ export async function createTables() {
     // =========================
     // REVIEWS TABLE
     // =========================
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS reviews (
+    await databasePool.query(`
+      CREATE TABLE IF NOT EXISTS ${databaseName}.reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
         CustomerName VARCHAR(255) NOT NULL,
         Rating INT NOT NULL,
@@ -134,8 +135,8 @@ export async function createTables() {
     // =========================
     // ACCOUNT PROFILE TABLE
     // =========================
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS account_profile (
+    await databasePool.query(`
+      CREATE TABLE IF NOT EXISTS ${databaseName}.account_profile (
         id INT AUTO_INCREMENT PRIMARY KEY,
         profile_image VARCHAR(255),
         full_name VARCHAR(100) NOT NULL,
@@ -157,10 +158,5 @@ export async function createTables() {
   } catch (error) {
     console.error("❌ Database Error:", error.message);
     throw error;
-
-  } finally {
-    if (connection) {
-      await connection.end();
-    }
   }
 }

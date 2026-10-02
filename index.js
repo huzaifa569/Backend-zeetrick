@@ -12,12 +12,19 @@ let tablesReady;
 
 const ensureTables = () => {
   if (!tablesReady) {
-    tablesReady = createTables();
+    tablesReady = createTables().catch((error) => {
+      tablesReady = undefined;
+      throw error;
+    });
   }
   return tablesReady;
 };
 
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("Express is running with ES Modules!");
+});
 
 app.use(async (req, res, next) => {
   try {
@@ -34,22 +41,22 @@ app.use("/api/addproduct", addProductRouter);
 app.use("/api/addCustomer", addCustomerRouter);
 app.use("/api/reviews", reviewsrouter);
 
-
-
-app.get("/", (req, res) => {
-  res.send("Express is running with ES Modules!");
+app.use((err, req, res, next) => {
+  console.error("Unhandled Runtime Error:", err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({
+    success: false,
+    message: "Internal Server Error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
 
-const startServer = async () => {
-  try {
-    await ensureTables();
-
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error("Error starting server:", error);
-  }
+const startServer = () => {
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
 };
 
 if (!process.env.VERCEL) {
