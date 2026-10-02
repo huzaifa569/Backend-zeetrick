@@ -103,9 +103,9 @@ export async function createTables() {
       CREATE TABLE IF NOT EXISTS customer (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(191) UNIQUE NOT NULL,
         location VARCHAR(255) NOT NULL,
-        orders JSON NOT NULL,
+        orders TEXT NOT NULL,
         optionList ENUM('regular', 'new', 'vip') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )

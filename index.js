@@ -8,8 +8,25 @@ import  reviewsrouter from "./routes/reviews.js"
 
 const app = express();
 const PORT = 3000;
+let tablesReady;
+
+const ensureTables = () => {
+  if (!tablesReady) {
+    tablesReady = createTables();
+  }
+  return tablesReady;
+};
 
 app.use(express.json());
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureTables();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.use("/api/register", registerRouter);
 app.use("/api/login", loginRouter);
@@ -25,7 +42,7 @@ app.get("/", (req, res) => {
 
 const startServer = async () => {
   try {
-    await createTables();
+    await ensureTables();
 
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
@@ -35,4 +52,8 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
