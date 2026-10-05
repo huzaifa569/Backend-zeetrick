@@ -1,12 +1,17 @@
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
-import { findUserByEmail } from '../models/login.js';
+import { findUserByEmail } from '../models/userModel.js';
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!email || !password) {
+    if (
+      typeof email !== 'string' ||
+      !email.trim() ||
+      typeof password !== 'string' ||
+      !password
+    ) {
       return res.status(400).json({
         success: false,
         message: 'Email and password are required!'
@@ -42,7 +47,15 @@ export const login = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Login successful',
-      token
+      token,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        age: user.age,
+        gender: user.gender
+      }
     });
 
   } catch (error) {
@@ -53,4 +66,3 @@ export const login = async (req, res) => {
     });
   }
 };
-

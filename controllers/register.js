@@ -1,12 +1,21 @@
-import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
-import { findUserByEmail, createUser } from '../models/register.js';
+import { findUserByEmail, createUser } from '../models/userModel.js';
 
 const register = async (req, res) => {
-    const { firstName, lastName, email, gender, age, password } = req.body;
+    const { firstName, lastName, email, gender, age, password } = req.body || {};
     const parsedAge = Number(age);
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-    if (!firstName || !lastName || !email || !gender || !age || !password) {
+    if (
+        !firstName ||
+        !lastName ||
+        !normalizedEmail ||
+        !gender ||
+        age === undefined ||
+        age === null ||
+        typeof password !== 'string' ||
+        !password
+    ) {
         return res.status(400).json({
             success: false,
             message: 'All fields are required.'
@@ -22,7 +31,7 @@ const register = async (req, res) => {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
         return res.status(400).json({
             success: false,
             message: 'Invalid email format'
@@ -44,7 +53,7 @@ const register = async (req, res) => {
     }
 
     try {
-        const existingUsers = await findUserByEmail(email);
+        const existingUsers = await findUserByEmail(normalizedEmail);
         if (existingUsers.length > 0) {
             return res.status(409).json({
                 success: false,
@@ -52,23 +61,19 @@ const register = async (req, res) => {
             });
         }
 
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-        
         const newUser = await createUser({
             firstName,
             lastName,
             age: parsedAge,
-            email,
+            email: normalizedEmail,
             gender,
-            password: hashedPassword
+            password
         });
 
         const token = jwt.sign(
             {
-                userId: newUser.id,
-                email: newUser.email,
-                firstName: newUser.firstName
+                id: newUser.id,
+                email: newUser.email
             },
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
@@ -98,6 +103,13 @@ const register = async (req, res) => {
             }
         });
     } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                success: false,
+                message: 'User with this email already exists'
+            });
+        }
+
         console.error('Signup error:', error);
         return res.status(500).json({
             success: false,

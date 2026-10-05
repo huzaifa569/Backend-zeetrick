@@ -12,6 +12,8 @@ export const findUserByEmail = async (email) => {
       'SELECT * FROM users WHERE email = ?',
       [email]
     );
+    console.log('Requested Email:', email);
+    console.log('Matching Users:', rows.length);
     return rows;
   } finally {
     connection.release();
