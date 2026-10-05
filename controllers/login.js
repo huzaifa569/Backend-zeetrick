@@ -1,6 +1,6 @@
-import bcrypt from "bcryptjs";
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { findUserByEmail } from '../models/userModel.js';
+import { findUserByEmail } from '../models/login.js';
 
 export const login = async (req, res) => {
   try {
@@ -26,9 +26,7 @@ export const login = async (req, res) => {
         message: 'Invalid email or password'
       });
     }
-
     const user = users[0];
-
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
