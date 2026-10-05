@@ -1,73 +1,7 @@
-// import express from "express";
-// import { createTables } from "./models/Sql.js";
-// import registerRouter from "./routes/register.js";
-// import loginRouter from "./routes/login.js";
-// import addProductRouter from "./routes/addProduct.js";
-// import addCustomerRouter from "./routes/addcustomer.js";
-// import  reviewsrouter from "./routes/reviews.js"
-
-// const app = express();
-// const PORT = 3000;
-// let tablesReady;
-
-// const ensureTables = () => {
-//   if (!tablesReady) {
-//     tablesReady = createTables().catch((error) => {
-//       tablesReady = undefined;
-//       throw error;
-//     });
-//   }
-//   return tablesReady;
-// };
-
-// app.use(express.json());
-
-// app.get("/", (req, res) => {
-//   res.send("Express is running with ES Modules!");
-// });
-
-// app.use(async (req, res, next) => {
-//   try {
-//     await ensureTables();
-//     next();
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-// app.use("/api/register", registerRouter);
-// app.use("/api/login", loginRouter);
-// app.use("/api/addproduct", addProductRouter);
-// app.use("/api/addCustomer", addCustomerRouter);
-// app.use("/api/reviews", reviewsrouter);
-
-// app.use((err, req, res, next) => {
-//   console.error("Unhandled Runtime Error:", err);
-//   if (res.headersSent) {
-//     return next(err);
-//   }
-//   res.status(500).json({
-//     success: false,
-//     message: "Internal Server Error",
-//     error: process.env.NODE_ENV === "development" ? err.message : undefined,
-//   });
-// });
-
-// const startServer = () => {
-//   app.listen(PORT, () => {
-//     console.log(`Server running at http://localhost:${PORT}`);
-//   });
-// };
-
-// if (!process.env.VERCEL) {
-//   startServer();
-// }
-
-// export default app;
-
 import express from "express";
-import cors from "cors"; // 1. Import CORS
+import cors from "cors";
 import { createTables } from "./models/Sql.js";
+
 import registerRouter from "./routes/register.js";
 import loginRouter from "./routes/login.js";
 import addProductRouter from "./routes/addProduct.js";
@@ -75,16 +9,15 @@ import addCustomerRouter from "./routes/addcustomer.js";
 import reviewsrouter from "./routes/reviews.js";
 
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
-// 2. Add CORS Middleware at the top before any routes
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       "http://localhost:3000",
-      // Add your production frontend Vercel URL here:
-      // "https://your-frontend-app.vercel.app"
+      // "https://zeetrick-frontend.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -94,24 +27,37 @@ app.use(
 
 app.use(express.json());
 
-// 3. Lazy-initialize database tables without blocking requests abruptly
+app.use((req, res, next) => {
+  if (req.method === "GET") {
+    res.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+  }
+
+  next();
+});
+
 let tablesReady;
+
 const ensureTables = () => {
   if (!tablesReady) {
     tablesReady = createTables().catch((error) => {
       console.error("Failed to initialize database tables:", error);
-      tablesReady = undefined; // Reset so next request can retry
+      tablesReady = undefined;
       throw error;
     });
   }
+
   return tablesReady;
 };
 
 app.get("/", (req, res) => {
-  res.send("Express is running with ES Modules!");
+  res.status(200).send("Express is running with ES Modules!");
 });
 
-// Middleware to ensure DB is initialized before handling API routes
 app.use(async (req, res, next) => {
   try {
     await ensureTables();
@@ -127,12 +73,20 @@ app.use("/api/addproduct", addProductRouter);
 app.use("/api/addCustomer", addCustomerRouter);
 app.use("/api/reviews", reviewsrouter);
 
-// 4. Global Error Handler (Guarantees CORS header even on status 500)
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
 app.use((err, req, res, next) => {
   console.error("Unhandled Runtime Error:", err);
+
   if (res.headersSent) {
     return next(err);
   }
+
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
