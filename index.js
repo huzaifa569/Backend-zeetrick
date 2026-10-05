@@ -12,11 +12,28 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+const ALLOWED_ORIGIN = "https://zeetrick-frontend.vercel.app";
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (req.path === "/") {
+    return next();
+  }
+
+  if (!origin || origin !== ALLOWED_ORIGIN) {
+    return res.status(403).json({
+      success: false,
+      message: "Access Restricted: Requests are only allowed from https://zeetrick-frontend.vercel.app",
+    });
+  }
+
+  next();
+});
+
 app.use(
   cors({
-    origin: [
-      "https://zeetrick-frontend.vercel.app",
-    ],
+    origin: ALLOWED_ORIGIN,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
