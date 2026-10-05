@@ -25,14 +25,22 @@ const corsOptions = {
       callback(new Error("CORS policy violation: Access Restricted"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   credentials: true,
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 204,
 };
 
+// 1. CORS Middleware Top Level
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+
+// 2. Pre-flight OPTIONS Requests Handling (Fast Return before DB middleware)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 app.use(express.json());
 
@@ -66,6 +74,7 @@ app.get("/", (req, res) => {
   res.status(200).send("Express is running with ES Modules!");
 });
 
+// Database Initialization (Bypasses preflight OPTIONS)
 app.use(async (req, res, next) => {
   try {
     await ensureTables();
