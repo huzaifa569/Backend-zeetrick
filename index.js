@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import { createTables } from "./models/Sql.js";
-
 import registerRouter from "./routes/register.js";
 import loginRouter from "./routes/login.js";
 import addProductRouter from "./routes/addProduct.js";
