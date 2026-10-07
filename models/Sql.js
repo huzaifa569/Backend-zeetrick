@@ -97,6 +97,28 @@ export async function createTables() {
       )
     `);
 
+    const [productColumns] = await databasePool.query(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'products'
+         AND COLUMN_NAME IN ('Category', 'Status')`,
+      [process.env.DB_NAME]
+    );
+    const existingProductColumns = new Set(
+      productColumns.map(({ COLUMN_NAME }) => COLUMN_NAME)
+    );
+
+    if (!existingProductColumns.has("Category")) {
+      await databasePool.query(
+        `ALTER TABLE ${databaseName}.products ADD COLUMN Category VARCHAR(255)`
+      );
+    }
+    if (!existingProductColumns.has("Status")) {
+      await databasePool.query(
+        `ALTER TABLE ${databaseName}.products ADD COLUMN Status VARCHAR(100)`
+      );
+    }
+
     console.log("✅ products table ready");
 
     // =========================

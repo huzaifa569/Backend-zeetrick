@@ -8,9 +8,8 @@ import {
     updateproduct
 } from "../models/addProduct.js";
 
-// 1. ADD PRODUCT (No validation checks)
 export const addproduct = async (req, res) => {
-    const { 
+    const {
         productName, 
         image, 
         optionList, 
@@ -20,7 +19,7 @@ export const addproduct = async (req, res) => {
         Category, 
         status, 
         Status 
-    } = req.body || {};
+    } = req.body ?? {};
 
     try {
         const exists = await productAlreadyExists(productName);
@@ -33,11 +32,11 @@ export const addproduct = async (req, res) => {
         }
 
         const ProductAdd = await addProduct({
-            productName,
+            productName: productName ?? null,
             image: image || null,
-            optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
-            price,
-            stock,
+            optionList: optionList ?? null,
+            price: price ?? null,
+            stock: stock ?? null,
             Category: category || Category || null,
             Status: status || Status || null
         });
@@ -50,9 +49,15 @@ export const addproduct = async (req, res) => {
         });
     } catch (error) {
         console.error("Error adding product:", error);
+        if (error?.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                message: "Product already exists",
+                success: false
+            });
+        }
         return res.status(500).json({
             message: "Product not added",
-            error: error.message,
+            error: error?.message || "An unexpected error occurred",
             success: false
         });
     }
@@ -71,7 +76,7 @@ export const Getallproduct = async (req, res) => {
         console.error("Error retrieving products:", error);
         return res.status(500).json({
             message: "Error retrieving products",
-            error: error.message,
+            error: error?.message || "An unexpected error occurred",
             success: false
         });
     }
@@ -98,7 +103,7 @@ export const GetallproductById = async (req, res) => {
         console.error("Error retrieving product by ID:", error);
         return res.status(500).json({
             message: "Error retrieving product",
-            error: error.message,
+            error: error?.message || "An unexpected error occurred",
             success: false
         });
     }
@@ -117,7 +122,7 @@ export const DeletedGetallproduct = async (req, res) => {
         console.error("Error deleting products:", error);
         return res.status(500).json({
             message: "Error deleting products",
-            error: error.message,
+            error: error?.message || "An unexpected error occurred",
             success: false
         });
     }
@@ -143,16 +148,15 @@ export const DeleteProductById = async (req, res) => {
         console.error("Error deleting product:", error);
         return res.status(500).json({
             message: "Error deleting product",
-            error: error.message,
+            error: error?.message || "An unexpected error occurred",
             success: false
         });
     }
 };
 
-// 6. UPDATE PRODUCT (No validation checks)
 export const UpdateProduct = async (req, res) => {
     const { id } = req.params;
-    const { 
+    const {
         productName, 
         image, 
         optionList, 
@@ -162,15 +166,15 @@ export const UpdateProduct = async (req, res) => {
         Category, 
         status, 
         Status 
-    } = req.body || {};
+    } = req.body ?? {};
 
     try {
         const result = await updateproduct(id, {
-            productName,
+            productName: productName ?? null,
             image: image || null,
-            optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
-            price,
-            stock,
+            optionList: optionList ?? null,
+            price: price ?? null,
+            stock: stock ?? null,
             Category: category || Category || null,
             Status: status || Status || null
         });
@@ -190,7 +194,7 @@ export const UpdateProduct = async (req, res) => {
         console.error("Error updating product:", error);
         return res.status(500).json({
             message: "Product not updated",
-            error: error.message,
+            error: error?.message || "An unexpected error occurred",
             success: false
         });
     }
