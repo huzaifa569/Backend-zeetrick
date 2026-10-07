@@ -1,4 +1,3 @@
-import express from "express";
 import {
     productAlreadyExists,
     addProduct,
@@ -7,18 +6,18 @@ import {
     GetallProductDelete,
     GetallProductDeleteById,
     updateproduct
-}
-    from
-    "../models/addProduct.js";
+} from "../models/addProduct.js";
 
 export const addproduct = async (req, res) => {
-    const { productName, image, optionList, price, stock } = req.body;
-    if (!productName || !optionList || price == null || stock == null) {
+    const { productName, image, optionList, price, stock, category, status } = req.body;
+
+    if (!productName || !optionList || price == null || stock == null || !category || !status) {
         return res.status(400).json({
-            message: "All fields are required",
+            message: "All required fields (productName, optionList, price, stock, category, status) must be provided",
             success: false
         });
     }
+
     try {
         const exists = await productAlreadyExists(productName);
 
@@ -28,13 +27,17 @@ export const addproduct = async (req, res) => {
                 success: false
             });
         }
+
         const ProductAdd = await addProduct({
             productName,
-            image,
-            optionList,
-            price,
-            stock
+            image: image || null,
+            optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
+            price: Number(price),
+            stock: Number(stock),
+            Category: category,
+            Status: status
         });
+
         return res.status(201).json({
             message: "Product added successfully",
             product: ProductAdd,
@@ -42,92 +45,104 @@ export const addproduct = async (req, res) => {
             createdAt: new Date()
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error adding product:", error);
         return res.status(500).json({
-            message: "Product not added",
+            message: "Failed to add product",
             success: false
         });
     }
 };
-
 
 export const Getallproduct = async (req, res) => {
     try {
         const products = await GetallProduct();
         return res.status(200).json({
             message: "Products retrieved successfully",
-            products: products,
+            products,
             success: true
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error retrieving products:", error);
         return res.status(500).json({
             message: "Error retrieving products",
             success: false
         });
     }
-}
-
+};
 
 export const GetallproductById = async (req, res) => {
     try {
-        const products = await GetallProductBYid(req.params.id);
+        const product = await GetallProductBYid(req.params.id);
+
+        if (!product) {
+            return res.status(404).json({
+                message: "Product not found",
+                success: false
+            });
+        }
+
         return res.status(200).json({
-            message: "Products retrieved successfully",
-            products: products,
+            message: "Product retrieved successfully",
+            product,
             success: true
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error retrieving product by ID:", error);
         return res.status(500).json({
-            message: "Error retrieving products",
+            message: "Error retrieving product",
             success: false
         });
     }
-}
+};
 
 export const DeletedGetallproduct = async (req, res) => {
     try {
-        const products = await GetallProductDelete();
+        const result = await GetallProductDelete();
         return res.status(200).json({
-            message: "Products Deletd successfully",
-            products: products,
+            message: "All products deleted and AUTO_INCREMENT reset successfully",
+            affectedRows: result.affectedRows,
             success: true
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error deleting all products:", error);
         return res.status(500).json({
-            message: "Error retrieving products",
+            message: "Error deleting all products",
             success: false
         });
     }
-}
-
+};
 
 export const DeleteProductById = async (req, res) => {
     try {
-        const products = await GetallProductDeleteById(req.params.id);
+        const result = await GetallProductDeleteById(req.params.id);
+
+        if (!result || result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Product not found or already deleted",
+                success: false
+            });
+        }
+
         return res.status(200).json({
             message: "Product deleted successfully",
-            products: products,
             success: true
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error deleting product:", error);
         return res.status(500).json({
-            message: "Error retrieving products",
+            message: "Error deleting product",
             success: false
         });
     }
-}
+};
 
 export const UpdateProduct = async (req, res) => {
     const { id } = req.params;
-    const { productName, image, optionList, price, stock } = req.body;
+    const { productName, image, optionList, price, stock, category, status } = req.body;
 
-    if (!productName || !optionList || price == null || stock == null) {
+    if (!productName || !optionList || price == null || stock == null || !category || !status) {
         return res.status(400).json({
-            message: "All fields are required",
+            message: "All required fields must be provided",
             success: false
         });
     }
@@ -135,16 +150,18 @@ export const UpdateProduct = async (req, res) => {
     try {
         const result = await updateproduct(id, {
             productName,
-            image,
-            optionList,
-            price,
-            stock
+            image: image || null,
+            optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
+            price: Number(price),
+            stock: Number(stock),
+            Category: category,
+            Status: status
         });
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
-                success: false,
-                message: "Product not found"
+                message: "Product not found",
+                success: false
             });
         }
 
@@ -153,8 +170,7 @@ export const UpdateProduct = async (req, res) => {
             success: true
         });
     } catch (error) {
-        console.error(error);
-
+        console.error("Error updating product:", error);
         return res.status(500).json({
             message: "Product not updated",
             success: false
