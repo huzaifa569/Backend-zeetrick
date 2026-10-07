@@ -8,13 +8,25 @@ import {
     updateproduct
 } from "../models/addProduct.js";
 
+// ADD PRODUCT
 export const addproduct = async (req, res) => {
-    const { productName, image, optionList, price, stock, category, status } = req.body;
+    // 1. Express casing and fallback handling
+    const productName = req.body.productName;
+    const image = req.body.image || null;
+    const optionList = req.body.optionList;
+    const price = req.body.price;
+    const stock = req.body.stock;
+    
+    // Support both 'category' / 'Category' & 'status' / 'Status'
+    const category = req.body.category || req.body.Category;
+    const status = req.body.status || req.body.Status;
 
+    // 2. Exact field validation check
     if (!productName || !optionList || price == null || stock == null || !category || !status) {
         return res.status(400).json({
             message: "All required fields (productName, optionList, price, stock, category, status) must be provided",
-            success: false
+            success: false,
+            receivedData: req.body // Troubleshooting ke liye response mein received values
         });
     }
 
@@ -30,7 +42,7 @@ export const addproduct = async (req, res) => {
 
         const ProductAdd = await addProduct({
             productName,
-            image: image || null,
+            image,
             optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
             price: Number(price),
             stock: Number(stock),
@@ -53,6 +65,7 @@ export const addproduct = async (req, res) => {
     }
 };
 
+// GET ALL PRODUCTS
 export const Getallproduct = async (req, res) => {
     try {
         const products = await GetallProduct();
@@ -70,6 +83,7 @@ export const Getallproduct = async (req, res) => {
     }
 };
 
+// GET PRODUCT BY ID
 export const GetallproductById = async (req, res) => {
     try {
         const product = await GetallProductBYid(req.params.id);
@@ -95,11 +109,12 @@ export const GetallproductById = async (req, res) => {
     }
 };
 
+// DELETE ALL PRODUCTS
 export const DeletedGetallproduct = async (req, res) => {
     try {
         const result = await GetallProductDelete();
         return res.status(200).json({
-            message: "All products deleted and AUTO_INCREMENT reset successfully",
+            message: "All products deleted successfully",
             affectedRows: result.affectedRows,
             success: true
         });
@@ -112,6 +127,7 @@ export const DeletedGetallproduct = async (req, res) => {
     }
 };
 
+// DELETE PRODUCT BY ID
 export const DeleteProductById = async (req, res) => {
     try {
         const result = await GetallProductDeleteById(req.params.id);
@@ -136,21 +152,32 @@ export const DeleteProductById = async (req, res) => {
     }
 };
 
+// UPDATE PRODUCT BY ID
 export const UpdateProduct = async (req, res) => {
     const { id } = req.params;
-    const { productName, image, optionList, price, stock, category, status } = req.body;
+
+    const productName = req.body.productName;
+    const image = req.body.image || null;
+    const optionList = req.body.optionList;
+    const price = req.body.price;
+    const stock = req.body.stock;
+    
+    // Support both lowercase and capital keys
+    const category = req.body.category || req.body.Category;
+    const status = req.body.status || req.body.Status;
 
     if (!productName || !optionList || price == null || stock == null || !category || !status) {
         return res.status(400).json({
-            message: "All required fields must be provided",
-            success: false
+            message: "All required fields (productName, optionList, price, stock, category, status) must be provided",
+            success: false,
+            receivedData: req.body
         });
     }
 
     try {
         const result = await updateproduct(id, {
             productName,
-            image: image || null,
+            image,
             optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
             price: Number(price),
             stock: Number(stock),
