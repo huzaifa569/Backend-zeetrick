@@ -8,27 +8,19 @@ import {
     updateproduct
 } from "../models/addProduct.js";
 
-// ADD PRODUCT
+// 1. ADD PRODUCT (No validation checks)
 export const addproduct = async (req, res) => {
-    // 1. Express casing and fallback handling
-    const productName = req.body.productName;
-    const image = req.body.image || null;
-    const optionList = req.body.optionList;
-    const price = req.body.price;
-    const stock = req.body.stock;
-    
-    // Support both 'category' / 'Category' & 'status' / 'Status'
-    const category = req.body.category || req.body.Category;
-    const status = req.body.status || req.body.Status;
-
-    // 2. Exact field validation check
-    if (!productName || !optionList || price == null || stock == null || !category || !status) {
-        return res.status(400).json({
-            message: "All required fields (productName, optionList, price, stock, category, status) must be provided",
-            success: false,
-            receivedData: req.body // Troubleshooting ke liye response mein received values
-        });
-    }
+    const { 
+        productName, 
+        image, 
+        optionList, 
+        price, 
+        stock, 
+        category, 
+        Category, 
+        status, 
+        Status 
+    } = req.body || {};
 
     try {
         const exists = await productAlreadyExists(productName);
@@ -42,12 +34,12 @@ export const addproduct = async (req, res) => {
 
         const ProductAdd = await addProduct({
             productName,
-            image,
+            image: image || null,
             optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
-            price: Number(price),
-            stock: Number(stock),
-            Category: category,
-            Status: status
+            price,
+            stock,
+            Category: category || Category || null,
+            Status: status || Status || null
         });
 
         return res.status(201).json({
@@ -59,31 +51,33 @@ export const addproduct = async (req, res) => {
     } catch (error) {
         console.error("Error adding product:", error);
         return res.status(500).json({
-            message: "Failed to add product",
+            message: "Product not added",
+            error: error.message,
             success: false
         });
     }
 };
 
-// GET ALL PRODUCTS
+// 2. GET ALL PRODUCTS
 export const Getallproduct = async (req, res) => {
     try {
         const products = await GetallProduct();
         return res.status(200).json({
             message: "Products retrieved successfully",
-            products,
+            products: products,
             success: true
         });
     } catch (error) {
         console.error("Error retrieving products:", error);
         return res.status(500).json({
             message: "Error retrieving products",
+            error: error.message,
             success: false
         });
     }
 };
 
-// GET PRODUCT BY ID
+// 3. GET PRODUCT BY ID
 export const GetallproductById = async (req, res) => {
     try {
         const product = await GetallProductBYid(req.params.id);
@@ -97,19 +91,20 @@ export const GetallproductById = async (req, res) => {
 
         return res.status(200).json({
             message: "Product retrieved successfully",
-            product,
+            product: product,
             success: true
         });
     } catch (error) {
         console.error("Error retrieving product by ID:", error);
         return res.status(500).json({
             message: "Error retrieving product",
+            error: error.message,
             success: false
         });
     }
 };
 
-// DELETE ALL PRODUCTS
+// 4. DELETE ALL PRODUCTS
 export const DeletedGetallproduct = async (req, res) => {
     try {
         const result = await GetallProductDelete();
@@ -119,15 +114,16 @@ export const DeletedGetallproduct = async (req, res) => {
             success: true
         });
     } catch (error) {
-        console.error("Error deleting all products:", error);
+        console.error("Error deleting products:", error);
         return res.status(500).json({
-            message: "Error deleting all products",
+            message: "Error deleting products",
+            error: error.message,
             success: false
         });
     }
 };
 
-// DELETE PRODUCT BY ID
+// 5. DELETE PRODUCT BY ID
 export const DeleteProductById = async (req, res) => {
     try {
         const result = await GetallProductDeleteById(req.params.id);
@@ -147,48 +143,42 @@ export const DeleteProductById = async (req, res) => {
         console.error("Error deleting product:", error);
         return res.status(500).json({
             message: "Error deleting product",
+            error: error.message,
             success: false
         });
     }
 };
 
-// UPDATE PRODUCT BY ID
+// 6. UPDATE PRODUCT (No validation checks)
 export const UpdateProduct = async (req, res) => {
     const { id } = req.params;
-
-    const productName = req.body.productName;
-    const image = req.body.image || null;
-    const optionList = req.body.optionList;
-    const price = req.body.price;
-    const stock = req.body.stock;
-    
-    // Support both lowercase and capital keys
-    const category = req.body.category || req.body.Category;
-    const status = req.body.status || req.body.Status;
-
-    if (!productName || !optionList || price == null || stock == null || !category || !status) {
-        return res.status(400).json({
-            message: "All required fields (productName, optionList, price, stock, category, status) must be provided",
-            success: false,
-            receivedData: req.body
-        });
-    }
+    const { 
+        productName, 
+        image, 
+        optionList, 
+        price, 
+        stock, 
+        category, 
+        Category, 
+        status, 
+        Status 
+    } = req.body || {};
 
     try {
         const result = await updateproduct(id, {
             productName,
-            image,
+            image: image || null,
             optionList: typeof optionList === "object" ? JSON.stringify(optionList) : optionList,
-            price: Number(price),
-            stock: Number(stock),
-            Category: category,
-            Status: status
+            price,
+            stock,
+            Category: category || Category || null,
+            Status: status || Status || null
         });
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
-                message: "Product not found",
-                success: false
+                success: false,
+                message: "Product not found"
             });
         }
 
@@ -200,6 +190,7 @@ export const UpdateProduct = async (req, res) => {
         console.error("Error updating product:", error);
         return res.status(500).json({
             message: "Product not updated",
+            error: error.message,
             success: false
         });
     }

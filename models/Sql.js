@@ -91,6 +91,8 @@ export async function createTables() {
         optionList TEXT NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         stock INT NOT NULL,
+        Category VARCHAR(255) DEFAULT NULL,
+        Status VARCHAR(100) DEFAULT 'Active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
