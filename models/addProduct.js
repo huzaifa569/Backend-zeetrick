@@ -6,7 +6,6 @@ export const addproductschema = {
     image: { type: 'string' },
     price: { type: 'number', required: true, min: 0 },
     stock: { type: 'number', required: true, min: 0 },
-    Category: { type: 'string' },
     Status: { type: 'string' },
     created_at: { type: 'string' }
 };
@@ -32,14 +31,13 @@ export const addProduct = async (productData = {}) => {
         const data = productData ?? {};
         const [result] = await connection.execute(
             `INSERT INTO products 
-            (productName, image,  price, stock, Category, Status) 
-            VALUES (?, ?, ?, ?, ?, ?)`,
+            (productName, image,  price, stock, Status) 
+            VALUES ( ?, ?, ?, ?, ?)`,
             [
                 data.productName ?? null,
                 data.image || null,
                 data.price ?? null,
                 data.stock ?? null,
-                data.Category || null,
                 data.Status || null
             ]
         );

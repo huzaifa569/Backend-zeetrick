@@ -14,9 +14,7 @@ export const addproduct = async (req, res) => {
         productName, 
         image, 
         price, 
-        stock, 
-        category, 
-        Category, 
+        stock,  
         status, 
         Status 
     } = req.body ?? {};
@@ -39,7 +37,6 @@ const cloudinaryImage = image
             image: cloudinaryImage,
             price: price ?? null,
             stock: stock ?? null,
-            Category: category || Category || null,
             Status: status || Status || null
         });
 
