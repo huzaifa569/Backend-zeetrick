@@ -1,16 +1,9 @@
 import pool from './db.js';
 
-const toDatabaseOptionList = (optionList) => {
-    if (optionList !== null && typeof optionList === 'object') {
-        return JSON.stringify(optionList);
-    }
-    return optionList ?? null;
-};
 
 export const addproductschema = {
     productName: { type: 'string', required: true },
     image: { type: 'string' },
-    optionList: { type: 'string', required: true },
     price: { type: 'number', required: true, min: 0 },
     stock: { type: 'number', required: true, min: 0 },
     Category: { type: 'string' },
@@ -37,15 +30,13 @@ export const addProduct = async (productData = {}) => {
     try {
         connection = await pool.getConnection();
         const data = productData ?? {};
-        const optionListValue = toDatabaseOptionList(data.optionList);
         const [result] = await connection.execute(
             `INSERT INTO products 
-            (productName, image, optionList, price, stock, Category, Status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            (productName, image,  price, stock, Category, Status) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [
                 data.productName ?? null,
                 data.image || null,
-                optionListValue,
                 data.price ?? null,
                 data.stock ?? null,
                 data.Category || null,
@@ -56,7 +47,6 @@ export const addProduct = async (productData = {}) => {
         return {
             id: result.insertId,
             ...data,
-            optionList: optionListValue
         };
     } catch (error) {
         console.error(error);
@@ -88,7 +78,6 @@ export const GetallProductBYid = async (id) => {
             `SELECT * FROM products WHERE id = ?`,
             [id ?? null]
         );
-        // Returns single product object if found, otherwise null
         return rows.length > 0 ? rows[0] : null;
     } catch (error) {
         console.error(error);
@@ -137,15 +126,13 @@ export const updateproduct = async (id, productData = {}) => {
         const data = productData ?? {};
         const [result] = await connection.execute(
             `UPDATE products 
-             SET productName = ?, image = ?, optionList = ?, price = ?, stock = ?, Category = ?, Status = ? 
+             SET productName = ?, image = ?,  price = ?, stock = ?, Status = ? 
              WHERE id = ?`,
             [
                 data.productName ?? null,
                 data.image || null,
-                toDatabaseOptionList(data.optionList),
                 data.price ?? null,
                 data.stock ?? null,
-                data.Category || null,
                 data.Status || null,
                 id ?? null
             ]

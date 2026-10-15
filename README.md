@@ -1,2 +1,4 @@
 # Backend-zeetrick
 Backend-Zeetrick is a RESTful e-commerce backend built with Node.js, Express.js, and MySQL. It provides secure APIs for authentication, products, categories, customers, orders, payments, and coupons. Features include JWT authentication, bcrypt password hashing, Joi validation, and complete CRUD operations.
+
+Product image data URLs are uploaded to Cloudinary before a product is saved. Configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in the ignored `.env` file using values from your Cloudinary dashboard. The Add Product API accepts a Base64 `data:image/...` URI from the selected image and rejects arbitrary URLs so placeholders or local paths cannot be saved. Product updates may retain their existing Cloudinary URL when the image is unchanged. Product image values are stored in a `TEXT` column to accommodate Cloudinary URLs.

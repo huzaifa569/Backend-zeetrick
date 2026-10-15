@@ -87,7 +87,7 @@ export async function createTables() {
       CREATE TABLE IF NOT EXISTS ${databaseName}.products (
         id INT AUTO_INCREMENT PRIMARY KEY,
         productName VARCHAR(255) UNIQUE NOT NULL,
-        image VARCHAR(255),
+        image TEXT,
         optionList TEXT NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         stock INT NOT NULL,
@@ -98,16 +98,25 @@ export async function createTables() {
     `);
 
     const [productColumns] = await databasePool.query(
-      `SELECT COLUMN_NAME
+      `SELECT COLUMN_NAME, DATA_TYPE
        FROM INFORMATION_SCHEMA.COLUMNS
        WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'products'
-         AND COLUMN_NAME IN ('Category', 'Status')`,
+         AND COLUMN_NAME IN ('image', 'Category', 'Status')`,
       [process.env.DB_NAME]
     );
-    const existingProductColumns = new Set(
-      productColumns.map(({ COLUMN_NAME }) => COLUMN_NAME)
+    const existingProductColumns = new Map(
+      productColumns.map(({ COLUMN_NAME, DATA_TYPE }) => [COLUMN_NAME, DATA_TYPE])
     );
 
+    if (!existingProductColumns.has("image")) {
+      await databasePool.query(
+          `ALTER TABLE ${databaseName}.products ADD COLUMN image TEXT`
+      );
+    } else if (existingProductColumns.get("image") !== "text") {
+      await databasePool.query(
+          `ALTER TABLE ${databaseName}.products MODIFY COLUMN image TEXT`
+      );
+    }
     if (!existingProductColumns.has("Category")) {
       await databasePool.query(
         `ALTER TABLE ${databaseName}.products ADD COLUMN Category VARCHAR(255)`

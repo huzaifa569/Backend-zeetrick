@@ -7,12 +7,12 @@ import {
     GetallProductDeleteById,
     updateproduct
 } from "../models/addProduct.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 export const addproduct = async (req, res) => {
     const {
         productName, 
         image, 
-        optionList, 
         price, 
         stock, 
         category, 
@@ -20,9 +20,9 @@ export const addproduct = async (req, res) => {
         status, 
         Status 
     } = req.body ?? {};
-
+  
     try {
-        const exists = await productAlreadyExists(productName);
+ const exists = await productAlreadyExists(productName);
 
         if (exists) {
             return res.status(409).json({
@@ -30,11 +30,13 @@ export const addproduct = async (req, res) => {
                 success: false
             });
         }
-
+const cloudinaryImage = image
+    ? (await uploadToCloudinary(image, "products")).secure_url
+    : null;
+           
         const ProductAdd = await addProduct({
             productName: productName ?? null,
-            image: image || null,
-            optionList: optionList ?? null,
+            image: cloudinaryImage,
             price: price ?? null,
             stock: stock ?? null,
             Category: category || Category || null,
@@ -157,26 +159,28 @@ export const DeleteProductById = async (req, res) => {
 export const UpdateProduct = async (req, res) => {
     const { id } = req.params;
     const {
-        productName, 
-        image, 
-        optionList, 
-        price, 
-        stock, 
-        category, 
-        Category, 
-        status, 
-        Status 
+        productName,
+        image,
+        price,
+        stock,
+        Status,
+        Category
     } = req.body ?? {};
 
     try {
+        if (Category !== undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "Category cannot be updated from Products. Update it from Categories instead."
+            });
+        }
+
         const result = await updateproduct(id, {
             productName: productName ?? null,
-            image: image || null,
-            optionList: optionList ?? null,
+            image: image ?? null,
             price: price ?? null,
             stock: stock ?? null,
-            Category: category || Category || null,
-            Status: status || Status || null
+            Status: Status ?? null
         });
 
         if (result.affectedRows === 0) {
@@ -187,15 +191,16 @@ export const UpdateProduct = async (req, res) => {
         }
 
         return res.status(200).json({
-            message: "Product updated successfully",
-            success: true
+            success: true,
+            message: "Product updated successfully"
         });
     } catch (error) {
         console.error("Error updating product:", error);
+
         return res.status(500).json({
+            success: false,
             message: "Product not updated",
-            error: error?.message || "An unexpected error occurred",
-            success: false
+            error: error?.message || "An unexpected error occurred"
         });
     }
 };
