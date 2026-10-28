@@ -31,6 +31,12 @@ This document lists the HTTP endpoints registered by the Express application.
 | DELETE | `/api/addproduct` | Deletes all products. | None. | No authentication required. |
 | DELETE | `/api/addproduct/:id` | Deletes a product by ID. | Path parameter: `id`. | No authentication required. |
 
+## Categories
+
+| Method | Endpoint | Purpose | Parameters / body | Headers / authentication |
+|---|---|---|---|---|
+| POST | `/api/category` | Creates a category. | JSON body (required): `category`. The value must be a non-empty string. | `Content-Type: application/json`. No authentication required. |
+
 ## Customers
 
 | Method | Endpoint | Purpose | Parameters / body | Headers / authentication |

@@ -6,7 +6,7 @@ import loginRouter from "./routes/login.js";
 import addProductRouter from "./routes/addProduct.js";
 import addCustomerRouter from "./routes/addcustomer.js";
 import reviewsrouter from "./routes/reviews.js";
-
+import addcategoryrouter from "./routes/addcategory.js"
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -89,6 +89,7 @@ app.use("/api/login", loginRouter);
 app.use("/api/addproduct", addProductRouter);
 app.use("/api/addCustomer", addCustomerRouter);
 app.use("/api/reviews", reviewsrouter);
+app.use("/api/category", addcategoryrouter);
 
 app.use((req, res) => {
   res.status(404).json({

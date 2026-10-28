@@ -130,6 +130,22 @@ export async function createTables() {
 
     console.log("✅ products table ready");
 
+
+    
+    // =========================
+    // CATEGORIES TABLE
+    // =========================
+    await databasePool.query(`
+      CREATE TABLE IF NOT EXISTS ${databaseName}.categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        Categories VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log("✅ categories table ready");
+
+
     // =========================
     // CUSTOMER TABLE
     // =========================
