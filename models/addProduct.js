@@ -1,8 +1,8 @@
 import pool from './db.js';
 
-
 export const addproductschema = {
     productName: { type: 'string', required: true },
+    category: { type: 'string', required: true },
     image: { type: 'string' },
     price: { type: 'number', required: true, min: 0 },
     stock: { type: 'number', required: true, min: 0 },
@@ -31,10 +31,11 @@ export const addProduct = async (productData = {}) => {
         const data = productData ?? {};
         const [result] = await connection.execute(
             `INSERT INTO products 
-            (productName, image,  price, stock, Status) 
-            VALUES ( ?, ?, ?, ?, ?)`,
+            (productName, category, image, price, stock, Status) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [
                 data.productName ?? null,
+                data.category ?? null,
                 data.image || null,
                 data.price ?? null,
                 data.stock ?? null,
@@ -58,7 +59,10 @@ export const GetallProduct = async () => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const [result] = await connection.execute(`SELECT * FROM products`);
+        // Explicit columns ensure extra/old columns like optionList never appear in responses
+        const [result] = await connection.execute(
+            `SELECT id, productName, category, image, price, stock, Status, created_at FROM products`
+        );
         return result;
     } catch (error) {
         console.error(error);
@@ -73,7 +77,7 @@ export const GetallProductBYid = async (id) => {
     try {
         connection = await pool.getConnection();
         const [rows] = await connection.execute(
-            `SELECT * FROM products WHERE id = ?`,
+            `SELECT id, productName, category, image, price, stock, Status, created_at FROM products WHERE id = ?`,
             [id ?? null]
         );
         return rows.length > 0 ? rows[0] : null;
@@ -124,10 +128,11 @@ export const updateproduct = async (id, productData = {}) => {
         const data = productData ?? {};
         const [result] = await connection.execute(
             `UPDATE products 
-             SET productName = ?, image = ?,  price = ?, stock = ?, Status = ? 
+             SET productName = ?, category = ?, image = ?, price = ?, stock = ?, Status = ? 
              WHERE id = ?`,
             [
                 data.productName ?? null,
+                data.category ?? null,
                 data.image || null,
                 data.price ?? null,
                 data.stock ?? null,

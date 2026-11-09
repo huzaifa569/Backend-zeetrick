@@ -9,18 +9,20 @@ import {
 } from "../models/addProduct.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 
+// 1. ADD PRODUCT
 export const addproduct = async (req, res) => {
     const {
         productName, 
+        category, // Added category destructuring
         image, 
         price, 
         stock,  
         status, 
         Status 
     } = req.body ?? {};
-  
+ 
     try {
- const exists = await productAlreadyExists(productName);
+        const exists = await productAlreadyExists(productName);
 
         if (exists) {
             return res.status(409).json({
@@ -28,12 +30,14 @@ export const addproduct = async (req, res) => {
                 success: false
             });
         }
-const cloudinaryImage = image
-    ? (await uploadToCloudinary(image, "products")).secure_url
-    : null;
-           
+
+        const cloudinaryImage = image
+            ? (await uploadToCloudinary(image, "products")).secure_url
+            : null;
+            
         const ProductAdd = await addProduct({
             productName: productName ?? null,
+            category: category ?? null, // Passed category to model
             image: cloudinaryImage,
             price: price ?? null,
             stock: stock ?? null,
@@ -153,27 +157,22 @@ export const DeleteProductById = async (req, res) => {
     }
 };
 
+// 6. UPDATE PRODUCT
 export const UpdateProduct = async (req, res) => {
     const { id } = req.params;
     const {
         productName,
+        category, // Enabled category in update
         image,
         price,
         stock,
-        Status,
-        Category
+        Status
     } = req.body ?? {};
 
     try {
-        if (Category !== undefined) {
-            return res.status(400).json({
-                success: false,
-                message: "Category cannot be updated from Products. Update it from Categories instead."
-            });
-        }
-
         const result = await updateproduct(id, {
             productName: productName ?? null,
+            category: category ?? null, // Passed category to update model
             image: image ?? null,
             price: price ?? null,
             stock: stock ?? null,

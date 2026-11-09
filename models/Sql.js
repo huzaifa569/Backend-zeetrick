@@ -88,7 +88,6 @@ export async function createTables() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         productName VARCHAR(255) UNIQUE NOT NULL,
         image TEXT,
-        optionList TEXT NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         stock INT NOT NULL,
         Category VARCHAR(255) DEFAULT NULL,
