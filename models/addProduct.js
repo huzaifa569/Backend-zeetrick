@@ -28,7 +28,9 @@ export const addProduct = async (productData = {}) => {
     let connection;
     try {
         connection = await pool.getConnection();
+
         const data = productData ?? {};
+
         const [result] = await connection.execute(
             `INSERT INTO products 
             (productName, category, image, price, stock, Status) 
@@ -47,6 +49,7 @@ export const addProduct = async (productData = {}) => {
             id: result.insertId,
             ...data,
         };
+
     } catch (error) {
         console.error(error);
         throw error;
@@ -108,10 +111,24 @@ export const GetallProductDeleteById = async (id) => {
     let connection;
     try {
         connection = await pool.getConnection();
+
         const [result] = await connection.execute(
             `DELETE FROM products WHERE id = ?`,
-            [id ?? null]
+            [id]
         );
+
+        await connection.execute(`
+            SET @count = 0;
+        `);
+
+        await connection.execute(`
+            UPDATE products SET id = (@count := @count + 1) ORDER BY id;
+        `);
+
+        await connection.execute(`
+            ALTER TABLE products AUTO_INCREMENT = 1;
+        `);
+
         return result;
     } catch (error) {
         console.error(error);
@@ -120,7 +137,6 @@ export const GetallProductDeleteById = async (id) => {
         if (connection) connection.release();
     }
 };
-
 export const updateproduct = async (id, productData = {}) => {
     let connection;
     try {
