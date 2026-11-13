@@ -1,27 +1,57 @@
+// import express from "express";
+// import { 
+//     addproduct, 
+//     Getallproduct, 
+//     GetallproductById, 
+//     DeletedGetallproduct,
+//     DeleteProductById ,
+//     UpdateProduct
+// } 
+// from "../controllers/addProduct.js";
+
+// const route = express.Router();
+
+// route.post("/", addproduct);
+
+// route.put("/:id",UpdateProduct)
+
+// route.get("/",Getallproduct)
+
+// route.get("/:id",GetallproductById)
+
+// route.delete("/",DeletedGetallproduct)
+
+// route.delete("/:id",DeleteProductById)
+
+
+// export default route;
+
+
 import express from "express";
-import { 
-    addproduct, 
-    Getallproduct, 
-    GetallproductById, 
+
+import {
+    addproduct,
+    Getallproduct,
+    GetallproductById,
     DeletedGetallproduct,
-    DeleteProductById ,
+    DeleteProductById,
     UpdateProduct
-} 
-from "../controllers/addProduct.js";
+} from "../controllers/addProduct.js";
+
+import upload from "../middleware/upload.js";
 
 const route = express.Router();
 
-route.post("/", addproduct);
+route.post("/", upload.single("image"), addproduct);
 
-route.put("/:id",UpdateProduct)
+route.put("/:id", upload.single("image"), UpdateProduct);
 
-route.get("/",Getallproduct)
+route.get("/", Getallproduct);
 
-route.get("/:id",GetallproductById)
+route.get("/:id", GetallproductById);
 
-route.delete("/",DeletedGetallproduct)
+route.delete("/", DeletedGetallproduct);
 
-route.delete("/:id",DeleteProductById)
-
+route.delete("/:id", DeleteProductById);
 
 export default route;
