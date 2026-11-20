@@ -1,3 +1,4 @@
+
 import pool from './db.js';
 
 // Validation Schema
@@ -8,7 +9,7 @@ export const addCustomerSchema = {
   location: { type: "string", required: true },
   orders: { type: "string", required: true },
   TotalSpent: { type: "string", required: true },
-  Tier: { type: "string", enum: ["VIP", "New", "Regular"], required: true }
+  Tier: { type: "string", enum: ["vip", "new", "regular"], required: true }
 };
 
 // Add Customer
@@ -17,7 +18,7 @@ export const addCustomer = async (customerData) => {
 
   try {
     const [result] = await connection.execute(
-      `INSERT INTO customer 
+      `INSERT INTO customer
       (image, name, email, location, orders, TotalSpent, Tier)
       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -62,7 +63,17 @@ export const GetallCustomer = async () => {
 
   try {
     const [result] = await connection.execute(
-      "SELECT * FROM customer"
+      `SELECT
+        id,
+        image,
+        name,
+        email,
+        location,
+        orders,
+        TotalSpent,
+        Tier,
+        created_at
+      FROM customer`
     );
 
     return result;
@@ -80,7 +91,18 @@ export const GetSpecificCustomerById = async (id) => {
 
   try {
     const [result] = await connection.execute(
-      "SELECT * FROM customer WHERE id = ?",
+      `SELECT
+        id,
+        image,
+        name,
+        email,
+        location,
+        orders,
+        TotalSpent,
+        Tier,
+        created_at
+      FROM customer
+      WHERE id = ?`,
       [id]
     );
 

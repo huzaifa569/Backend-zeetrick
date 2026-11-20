@@ -159,7 +159,7 @@ await databasePool.query(`
     location VARCHAR(255) NOT NULL,
     orders TEXT NOT NULL,
     TotalSpent DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    Tier ENUM('VIP', 'New', 'Regular') NOT NULL DEFAULT 'New',
+    Tier ENUM('vip', 'new', 'regular') NOT NULL DEFAULT 'new',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
 `);
@@ -187,7 +187,7 @@ if (!existingColumns.includes("TotalSpent")) {
 if (!existingColumns.includes("Tier")) {
   await databasePool.query(`
     ALTER TABLE ${databaseName}.customer
-    ADD COLUMN Tier ENUM('VIP', 'New', 'Regular') NOT NULL DEFAULT 'New'
+    ADD COLUMN Tier ENUM('vip', 'new', 'regular') NOT NULL DEFAULT 'new'
   `);
 }
 
