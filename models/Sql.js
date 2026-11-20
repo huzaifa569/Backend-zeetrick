@@ -148,19 +148,51 @@ export async function createTables() {
     // =========================
     // CUSTOMER TABLE
     // =========================
-    await databasePool.query(`
-      CREATE TABLE IF NOT EXISTS ${databaseName}.customer (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(191) UNIQUE NOT NULL,
-        location VARCHAR(255) NOT NULL,
-        orders TEXT NOT NULL,
-        optionList ENUM('regular', 'new', 'vip') NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+   
 
-    console.log("✅ customer table ready");
+await databasePool.query(`
+  CREATE TABLE IF NOT EXISTS ${databaseName}.customer (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image VARCHAR(500) DEFAULT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(191) UNIQUE NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    orders TEXT NOT NULL,
+    TotalSpent DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    Tier ENUM('VIP', 'New', 'Regular') NOT NULL DEFAULT 'New',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+const [columns] = await databasePool.query(`
+  SHOW COLUMNS FROM ${databaseName}.customer
+`);
+
+const existingColumns = columns.map(column => column.Field);
+
+if (!existingColumns.includes("image")) {
+  await databasePool.query(`
+    ALTER TABLE ${databaseName}.customer
+    ADD COLUMN image VARCHAR(500) DEFAULT NULL
+  `);
+}
+
+if (!existingColumns.includes("TotalSpent")) {
+  await databasePool.query(`
+    ALTER TABLE ${databaseName}.customer
+    ADD COLUMN TotalSpent DECIMAL(12,2) NOT NULL DEFAULT 0.00
+  `);
+}
+
+if (!existingColumns.includes("Tier")) {
+  await databasePool.query(`
+    ALTER TABLE ${databaseName}.customer
+    ADD COLUMN Tier ENUM('VIP', 'New', 'Regular') NOT NULL DEFAULT 'New'
+  `);
+}
+
+console.log("✅ customer table ready");
+
 
     // =========================
     // REVIEWS TABLE
